@@ -1,0 +1,15 @@
+<!ELEMENT order (customer, items)> 
+<!ATTLIST order 
+    id CDATA #REQUIRED> 
+<!ELEMENT customer EMPTY> 
+<!ATTLIST customer 
+    firstname CDATA #REQUIRED 
+    lastname CDATA #REQUIRED 
+    accountNum CDATA #REQUIRED> 
+<!ELEMENT items (item+)> 
+<!ELEMENT item (name, quantity, unitprice)> 
+<!ATTLIST item  
+    id CDATA #REQUIRED> 
+<!ELEMENT name (#PCDATA)> 
+<!ELEMENT quantity (#PCDATA)> 
+<!ELEMENT unitprice (#PCDATA)>
