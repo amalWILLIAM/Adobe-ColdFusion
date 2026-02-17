@@ -2,7 +2,7 @@ component extends = "framework.one" {
 
     this.name = "first";
 
-    this.datasource = "cf_curd";
+    this.datasource = "cf_db";
 
     variables.framework = {
 
