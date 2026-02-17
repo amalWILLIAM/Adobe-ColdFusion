@@ -140,6 +140,69 @@ component {
 
 
     }
-    
+
+    public function searchEmployee(required string queryterm , string sortorder = "ASC")
+    {
+
+        var safeOrder = (ucase(arguments.sortorder) EQ "ASC") ? "ASC" : "DESC";
+
+        local.sql = "SELECT e.emp_id , e.emp_name , e.role , e.email ,d.dept_name
+                    FROM employees e 
+                    join departments d on e.dept_id = d.dept_id 
+                    WHERE e.emp_name LIKE ? OR e.role LIKE ? OR e.email LIKE ?
+                    ORDER BY e.emp_name #safeOrder#";
+
+        local.params = [
+
+            arguments.queryterm & "%",
+            arguments.queryterm & "%",
+            arguments.queryterm & "%"
+
+        ];
+
+
+
+        local.execute = queryExecute(local.sql,local.params);
+
+
+        return(local.execute);
+
+    }
+
+    public any function getEmployeepaged(required numeric page, required numeric pagesize)
+    {
+
+        local.offset = (page -1) * pagesize;
+
+
+        local.dataQ = queryExecute("SELECT e.emp_id , e.emp_name , e.role , e.email ,d.dept_name 
+                                FROM employees e
+                                JOIN departments d ON e.dept_id = d.dept_id
+                                ORDER BY e.emp_id
+                                Limit :pagesize
+                                Offset :offset",
+                                {
+
+                                    pagesize : {value = pagesize , cfsqltype = "cf_sql_integer"},
+                                    offset : {value = local.offset , cfsqltype = "cf_sql_integer"}
+
+                                });
+
+
+        
+        local.countQ = queryExecute("SELECT COUNT(*) AS totalcount FROM employees");
+
+
+
+
+        return {
+
+            data : local.dataQ,
+
+            totalrows : local.countQ.totalcount
+
+        };
+
+    }
 
 }

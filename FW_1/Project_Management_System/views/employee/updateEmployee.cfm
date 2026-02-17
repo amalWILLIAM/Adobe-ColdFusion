@@ -16,9 +16,9 @@
         <div class="col-md-6">
 
             <!--- FW/1 passes data in rc --->
-            <cfoutput query="rc.employeedetails">
+            <cfoutput query="rc.employeeindex">
             <form method="post"
-                  action="#buildURL('employee.updateEmployee')#"
+                  action="#buildURL('employee.update')#"
                   class="border rounded p-4 shadow-sm bg-light">
 
                 <!-- Employee ID (required for update) -->

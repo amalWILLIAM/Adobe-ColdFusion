@@ -1,6 +1,6 @@
 component extends = "framework.one" {
 
-    this.name = "Project_Management_System";
+    this.name = "first";
 
     this.datasource = "cf_curd";
 

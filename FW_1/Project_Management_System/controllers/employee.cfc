@@ -12,18 +12,36 @@ property employeeServices;
 
     public function index(rc)
     {
-        
+        //rcpagination
+        rc.page = val(rc.page ? : 1);
+        rc.pagesize = 5;
 
-        rc.employeeindex = employeeServices.getall();
+        rc.result = employeeServices.getEmployeepaged(rc.page,rc.pagesize);
+
+        rc.employeeindex = rc.result.data;
+
+
+        rc.totalrows = rc.result.totalrows;
+
+        rc.totalpages = ceiling(rc.totalrows/rc.pagesize);
+
 
     }
 
     public function updateEmployee(rc)
     {
 
-        rc.employeedetails = employeeServices.getById(rc.id);
+        rc.employeeindex = employeeServices.getById(rc.id);
 
-        variables.fw.redirect("employee.index");   
+
+    }
+
+    public function update(rc)
+    {
+
+        employeeServices.updateEmployee(rc);
+
+        variables.fw.redirect("employee.index");
 
     }
     
@@ -39,23 +57,40 @@ property employeeServices;
     public function add(rc)
     {
 
-        
         employeeServices.addEmployee(rc);
 
         variables.fw.redirect("employee.index");
 
     }
 
-
-
-
     public  function delete(rc)
     {
 
         employeeServices.deleteEmployee(rc);
+
         variables.fw.redirect("employee.index");
 
 
     }
+
+    public function search(rc)
+    {
+
+
+        if(len(trim(rc.queryterm)))
+        {
+
+            rc.employees = employeeServices.searchEmployee(queryterm);
+           
+        }else{
+
+            rc.employees = employeeServices.getall(); 
+
+        }
+
+        fw.setview("employee.index");
+
+    }
+
 
 }
