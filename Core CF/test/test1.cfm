@@ -1,0 +1,3 @@
+<cfoutput>
+Hello #username#
+</cfoutput>

@@ -1,0 +1,12 @@
+writedump("If you see this, we didn’t crash… yet.");
+abort;
+
+writedump();
+abort;
+
+<cfdump var = "If you see this, we didn’t crash… yet.">
+<cfabort>
+
+<cfdump var = "">
+<cfabort>
+
