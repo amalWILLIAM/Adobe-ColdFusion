@@ -1,6 +1,6 @@
 component extends = "framework.one"{
 
-    this.name = "shopping_website";
+    this.name = "shopping_websit";
     this.dataSource = "shopping_db";
 
     variables.framework = {
