@@ -1,0 +1,225 @@
+**Shopping Website Assignment – FW/1 Workflow Documentation (Module-Specific DABs)**
+
+---
+
+## 1. Database Design (Relational DB)
+
+### 1.1 Users Table
+
+* Table: `users`
+* Purpose: Store both admin and regular users.
+* Columns:
+  | Column       | Type        | Notes                        |
+  |--------------|------------|-------------------------------|
+  | user_id      | INT PK AI  | Primary key, auto-increment   |
+  | username     | VARCHAR    | Unique, required              |
+  | email        | VARCHAR    | Unique, required              |
+  | password     | VARCHAR    | Hashed (bcrypt)               |
+  | role         | ENUM       | 'admin' or 'user'             |
+  | created_at   | DATETIME   | Default CURRENT_TIMESTAMP     |
+  | updated_at   | DATETIME   | On update CURRENT_TIMESTAMP   |
+
+---
+
+### 1.2 Products Table
+
+* Table: `products`
+* Purpose: Store all products available for sale.
+* Columns:
+  | Column          | Type       | Notes                        |
+  |-----------------|-----------|-------------------------------|
+  | product_id      | INT PK AI | Primary key                   |
+  | name            | VARCHAR   | Product name                  |
+  | description     | TEXT      | Optional                     |
+  | price           | DECIMAL   | Required                     |
+  | stock_quantity  | INT       | Required                     |
+  | created_at      | DATETIME  | Default CURRENT_TIMESTAMP     |
+  | updated_at      | DATETIME  | On update CURRENT_TIMESTAMP   |
+
+---
+
+### 1.3 Orders Table
+
+* Table: `orders`
+* Purpose: Store completed or pending orders.
+* Columns:
+  | Column       | Type       | Notes                        |
+  |--------------|-----------|-------------------------------|
+  | order_id     | INT PK AI | Primary key                   |
+  | user_id      | INT FK    | References `users.user_id`    |
+  | total_amount | DECIMAL   | Sum of all order items        |
+  | status       | ENUM      | 'pending', 'completed', 'cancelled' |
+  | created_at   | DATETIME  | Default CURRENT_TIMESTAMP     |
+  | updated_at   | DATETIME  | On update CURRENT_TIMESTAMP   |
+
+---
+
+### 1.4 Order Items Table
+
+* Table: `order_items`
+* Purpose: Store products for each order.
+* Columns:
+  | Column        | Type       | Notes                        |
+  |---------------|-----------|-------------------------------|
+  | order_item_id | INT PK AI | Primary key                   |
+  | order_id      | INT FK    | References `orders.order_id`  |
+  | product_id    | INT FK    | References `products.product_id` |
+  | quantity      | INT       | Required                     |
+  | price         | DECIMAL   | Price at time of order        |
+
+---
+
+### 1.5 Optional: Cart Table
+
+* Table: `cart`
+* Purpose: Persist user cart in database (optional, session-based also possible).
+* Columns:
+  | Column    | Type       | Notes                        |
+  |-----------|-----------|-------------------------------|
+  | cart_id   | INT PK AI | Primary key                   |
+  | user_id   | INT FK    | References `users.user_id`    |
+  | product_id| INT FK    | References `products.product_id` |
+  | quantity  | INT       | Number of items               |
+
+---
+
+## 2. FW/1 Project Structure (Module-Specific DABs)
+
+```
+/models/
+    UserDAB.cfc       -> All user-related DB functions (register, login, fetch)
+    ProductDAB.cfc    -> All product-related DB functions (CRUD, stock)
+    OrderDAB.cfc      -> Order operations (insert orders, update status)
+    OrderItemDAB.cfc  -> Insert/fetch order items
+    CartDAB.cfc       -> Optional cart operations (add, update, remove)
+    CategoryDAB.cfc   -> Optional, product categories CRUD
+/services/
+    UserService.cfc
+    ProductService.cfc
+    OrderService.cfc
+    CartService.cfc (optional)
+/controllers/
+    Auth.cfc
+    Admin.cfc
+    User.cfc
+/views/
+    /auth/        -> login.cfm, register.cfm
+    /admin/       -> dashboard.cfm, products.cfm, orders.cfm
+    /user/        -> home.cfm, products.cfm, cart.cfm, checkout.cfm
+```
+
+---
+
+## 3. Authentication Workflow
+
+1. **Registration (users only)**
+
+   * Input validation
+   * Password hashed using bcrypt
+   * Use `UserDAB.cfc` function to insert user
+
+2. **Login**
+
+   * Verify username/email and password via `UserDAB.cfc`
+   * Set `session.user = {id, username, role}`
+
+3. **Access Control**
+
+   * Admin pages → role = `admin` only
+   * User pages → role = `user` or `admin`
+   * Redirect unauthorized users
+
+---
+
+## 4. Admin Features
+
+1. **Product Management**
+
+   * Add/Edit/Delete products using `ProductDAB.cfc`
+   * Update stock quantities
+   * Product listing page
+
+2. **Order Management**
+
+   * View all orders via `OrderDAB.cfc` + `OrderItemDAB.cfc`
+   * Change order status (`pending`, `completed`, `cancelled`)
+
+3. **User Management (Optional)**
+
+   * Edit user roles, deactivate users via `UserDAB.cfc`
+
+4. **Category Management (Optional)**
+
+   * CRUD via `CategoryDAB.cfc`
+
+---
+
+## 5. User Features
+
+1. **Browse Products**
+
+   * Product listing with search and filters using `ProductDAB.cfc`
+   * Add-to-cart button (session or `CartDAB.cfc`)
+
+2. **Cart Functionality**
+
+   * Add/update/remove items using `CartDAB.cfc` or session
+   * Show total price
+
+3. **Checkout**
+
+   * Create order in `OrderDAB.cfc`
+   * Insert order items into `OrderItemDAB.cfc`
+   * Reduce stock via `ProductDAB.cfc`
+   * Clear cart
+   * Show order confirmation
+
+---
+
+## 6. Cart & Checkout Flow
+
+```
+[Product Listing] 
+      ↓ (Add to Cart)
+[Cart Page / Session or DB] 
+      ↓ (Update/Remove)
+[Checkout] 
+      ↓
+[CartService] → [CartDAB.cfc]
+      ↓
+[OrderService] → [OrderDAB.cfc + OrderItemDAB.cfc + ProductDAB.cfc stock update]
+      ↓
+[Order Confirmation] 
+```
+
+---
+
+## 7. Best Practices
+
+* Keep **all database operations in module-specific DABs**
+* Use `queryExecute()` with parameterized queries (avoid SQL injection)
+* Hash passwords securely (bcrypt)
+* Keep business logic in **services**, not controllers
+* Handle transactions (`cftransaction`) in DABs for multi-step operations like checkout
+* Use pagination for product listing if needed
+* Input validation: front-end and back-end
+
+---
+
+## ✅ Checklist for Implementation
+
+1. [ ] Create database and all tables
+2. [ ] Seed admin user manually
+3. [ ] Implement `Auth.cfc` (register/login/logout) using `UserDAB.cfc`
+4. [ ] Implement `UserService.cfc` and `ProductService.cfc`
+5. [ ] Implement `CartService.cfc` using `CartDAB.cfc` (optional)
+6. [ ] Create views for login/register, product listing, cart, checkout
+7. [ ] Implement **cart functionality** (add/update/remove) via `CartDAB.cfc` or session
+8. [ ] Implement **checkout** via `OrderService.cfc` calling `OrderDAB.cfc`, `OrderItemDAB.cfc`, `ProductDAB.cfc`
+9. [ ] Implement `Admin.cfc` for product/order/category/user management
+10. [ ] Create admin views: dashboard, products, orders, categories, users
+11. [ ] Implement access control (admin vs user)
+12. [ ] Test full flow: register → login → browse → add to cart → checkout
+13. [ ] Test admin features: add/edit/delete product → update stock → view/manage orders/users/categories
+14. [ ] Final testing: validate data integrity, session secu
+
